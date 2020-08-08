@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"io"
 
+	"encoding/json"
 	// "fmt"
 	"strings"
 )
@@ -90,7 +91,7 @@ func (c *Connection) connectHandlerOverWS(h Headers) (e error) {
 	//fmt.Printf("CHDB01\n")
 	var b []byte
 	// affected by heartbeat may receive empty frame
-	for strings.TrimSpace(string(b)) == "" {
+	for strings.TrimSpace(string(b)) == "" || len(b) <= 1 {
 		_, r, e := c.wsConn.NextReader()
 		if e != nil {
 			return e
@@ -147,11 +148,20 @@ func (c *Connection) connectHandlerOverWS(h Headers) (e error) {
 
 	Called one time per connection at connection start.
 */
-func connectResponse(s string) (*Frame, error) {
+func connectResponse(response string) (*Frame, error) {
 	//
 	f := new(Frame)
 	f.Headers = Headers{}
 	f.Body = make([]uint8, 0)
+
+	if response[0] != '[' {
+		response = response[1:]
+	}
+	
+	var arr []string
+	_ = json.Unmarshal([]byte(response), &arr)
+
+	s := arr[0]
 
 	// Get f.Command
 	c := strings.SplitN(s, "\n", 2)

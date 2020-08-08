@@ -162,7 +162,8 @@ func (c *Connection) wireWriteOverWS(d wiredata) {
 		d.errchan <- e
 		return
 	}
-
+	// edited
+	_, e = wtr.Write([]byte("[\""))
 	switch f.Command {
 	case "\n": // HeartBeat frame
 		if c.dld.wde && c.dld.wds {
@@ -355,7 +356,7 @@ func (f *Frame) writeFrameOverWS(w io.WriteCloser, c *Connection) error {
 	// Writes start
 
 	// Write the frame Command
-	_, e := w.Write([]byte(f.Command + "\n"))
+	_, e := w.Write([]byte(f.Command + "\\n"))
 	if c.checkWriteError(e) != nil {
 		return e
 	}
@@ -365,7 +366,7 @@ func (f *Frame) writeFrameOverWS(w io.WriteCloser, c *Connection) error {
 		if c.dld.wde && c.dld.wds {
 			_ = c.wsConn.SetWriteDeadline(time.Now().Add(c.dld.wdld))
 		}
-		_, e := w.Write([]byte(f.Headers[i] + ":" + f.Headers[i+1] + "\n"))
+		_, e := w.Write([]byte(f.Headers[i] + ":" + f.Headers[i+1] + "\\n"))
 		if c.checkWriteError(e) != nil {
 			return e
 		}
@@ -376,7 +377,7 @@ func (f *Frame) writeFrameOverWS(w io.WriteCloser, c *Connection) error {
 	if c.dld.wde && c.dld.wds {
 		_ = c.wsConn.SetWriteDeadline(time.Now().Add(c.dld.wdld))
 	}
-	_, e = w.Write([]byte("\n"))
+	_, e = w.Write([]byte("\\n"))
 	if c.checkWriteError(e) != nil {
 		return e
 	}
@@ -393,6 +394,7 @@ func (f *Frame) writeFrameOverWS(w io.WriteCloser, c *Connection) error {
 	if c.dld.wde && c.dld.wds {
 		_ = c.wsConn.SetWriteDeadline(time.Now().Add(c.dld.wdld))
 	}
+	_, e = w.Write([]byte("\\u0000\"]"))
 	_, e = w.Write([]byte{0})
 	if c.checkWriteError(e) != nil {
 		return e
